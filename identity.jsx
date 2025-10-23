@@ -8,10 +8,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Platform,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
+import CustomDatePicker from "components/CustomDatePicker";
 import useTranslationWithPrefix from "hooks/useTranslationWithPrefix";
 import { selectForm, updateForm } from "redux/slices/formSlice";
 import {
@@ -82,6 +81,7 @@ const Identity = () => {
     inCorpDate: false,
     idExpiryDate: false,
   });
+  const [currentDateField, setCurrentDateField] = useState("");
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -197,7 +197,7 @@ const Identity = () => {
     navigation.navigate(paths.address);
   };
 
-  const handleDateChange = (event, selectedDate, fieldName) => {
+  const handleDateChange = (selectedDate, fieldName) => {
     setShowDatePicker({ ...showDatePicker, [fieldName]: false });
     if (selectedDate) {
       handleInputChange(selectedDate, fieldName);
@@ -205,7 +205,16 @@ const Identity = () => {
   };
 
   const showDatePickerModal = (fieldName) => {
+    setCurrentDateField(fieldName);
     setShowDatePicker({ ...showDatePicker, [fieldName]: true });
+  };
+
+  const handleDateConfirm = (selectedDate) => {
+    handleDateChange(selectedDate, currentDateField);
+  };
+
+  const handleDateCancel = () => {
+    setShowDatePicker({ ...showDatePicker, [currentDateField]: false });
   };
 
   const renderDateField = (fieldName, label, isRequired = false) => {
@@ -234,16 +243,13 @@ const Identity = () => {
             </Text>
           </TouchableOpacity>
         )}
-        {showDatePicker[fieldName] && (
-          <DateTimePicker
-            value={value || new Date()}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, selectedDate) =>
-              handleDateChange(event, selectedDate, fieldName)
-            }
-          />
-        )}
+        <CustomDatePicker
+          isVisible={showDatePicker[fieldName]}
+          onConfirm={handleDateConfirm}
+          onCancel={handleDateCancel}
+          initialDate={value}
+          calendarType="hijri" // You can change this to "gregorian" if needed
+        />
       </View>
     );
   };
@@ -414,15 +420,17 @@ const Identity = () => {
   };
 
   return (
-    <KycEntryLayout
-      step={1}
-      barPages={10}
-      barPercentage={(1 / 10) * 100}
-      split
-      leftHeading={labels("identity")}
-      leftBody={labels("asPartOfKYCProcedures")}
-      rightContent={renderIdentityForm()}
-    />
+    <>
+      <KycEntryLayout
+        step={1}
+        barPages={10}
+        barPercentage={(1 / 10) * 100}
+        split
+        leftHeading={labels("identity")}
+        leftBody={labels("asPartOfKYCProcedures")}
+        rightContent={renderIdentityForm()}
+      />
+    </>
   );
 };
 
